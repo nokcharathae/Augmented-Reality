@@ -45,11 +45,11 @@ scene.add(light);
 const deg2rad=3*(Math.PI/180);
 
 const WS=new THREE.Vector3(boxobj.position.x,boxobj.position.y,boxobj.position.z);
-console.log(WS);
 const PS=WS.project(camera);
 PS.x=(PS.x+1.0)/2.0*window.innerWidth;
 PS.y=-(PS.y-1.0)/2.0*window.innerHeight;
 console.log(WS);
+console.log(PS);
 function trans()
 {
     const PS2= new THREE.Vector3((PS.x / window.innerWidth) * 2.0 -1.0,-(PS.y / window.innerHeight) * 2.0+1.0,-1);
@@ -101,6 +101,7 @@ function checkKeyPressed(e) {
         case 97: // 'a'
         // boxobj.applyMatrix4( new THREE.Matrix4().makeTranslation(WS_dis,0,0));
         PS.x=PS.x-10;
+        console.log(WS);
         
         // boxobj.applyMatrix4( new THREE.Matrix4().makeTranslation(WS2.x,0,0));
         boxobj.applyMatrix4( new THREE.Matrix4().makeTranslation(trans(),0,0));
