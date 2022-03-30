@@ -1,4 +1,4 @@
-import * as THREE from '/Augmented-Reality/node_modules/three/build/three.module.js';
+import * as THREE from '/node_modules/three/build/three.module.js';
 const camera=new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight,0.1,1000);
 const scene=new THREE.Scene();
 
@@ -44,16 +44,32 @@ scene.add(light);
 
 const deg2rad=3*(Math.PI/180);
 
-const pt_x = (10 / 1920) * 2.0 -1.0;
-const pt_y = -(10 / 1080) * 2.0+1.0;
-const pt_x2 = (0 / 1920) * 2.0 -1.0;
-const pt_y2 = -(0 / 1080) * 2.0+1.0;
+const WS=new THREE.Vector3(boxobj.position.x,boxobj.position.y,boxobj.position.z);
+const PS=WS.project(camera).clone();
+PS.x=(PS.x+1.0)/2.0*window.innerWidth;
+PS.y=-(PS.y-1.0)/2.0*window.innerHeight;
+console.log(WS);
+function trans()
+{
+    const PS2= new THREE.Vector3((PS.x / window.innerWidth) * 2.0 -1.0,-(PS.y / window.innerHeight) * 2.0+1.0,-1);
+    const WS2=PS2.unproject(camera).clone();
+    WS2.z=WS.z;
+    const dif_vec=WS.distanceTo(WS2);
+    console.log(WS);
+    console.log(WS2);
+    console.log(dif_vec);
+    return dif_vec;
+}
+
+/*
+const D_PS=camera.localToWorld(new THREE.Vector3(0,0,0)).distanceTo(pt1);
+const D_WS=camera.localToWorld(new THREE.Vector3(0,0,0)).distanceTo(V1);
 let prev_PS = new THREE.Vector3(pt_x,pt_y,-1);
 let prev_WS = prev_PS.unproject(camera);
 let PS = new THREE.Vector3(pt_x2,pt_y2,-1);
 let WS = PS.unproject(camera);
 let V1 = WS.sub(camera.getWorldPosition(new THREE.Vector3(0,0,0)));
-let V2 = prev_WS.sub(camera.getWorldPosition(new THREE.Vector3(0,0,0)));
+let V2 = prev_WS.sub(camera.getWorldPosition(new THREE.Vector3(0,0,0)));*/
 
 window.addEventListener("keypress", checkKeyPressed, false);
 
@@ -83,23 +99,23 @@ function checkKeyPressed(e) {
         // 2) translation
         case 97: // 'a'
         // boxobj.applyMatrix4( new THREE.Matrix4().makeTranslation(WS_dis,0,0));
-        let D_PS=camera.localToWorld(new THREE.Vector3(0,0,0)).distanceTo(PS);
-        let D_WS=camera.localToWorld(new THREE.Vector3(0,0,0)).distanceTo(V1);
-        let scale=-D_WS/D_PS;
-        console.log(scale);
-        let cameraMoveInWorld = WS.sub(prev_WS);
-        mat_viewingTrans.makeTranslation(cameraMoveInWorld.x*scale, 
-            cameraMoveInWorld.y*scale,cameraMoveInWorld.z*scale);
-            boxobj.matrix.premultiply(mat_viewingTrans);
+        PS.x=PS.x-10;
+        
+        // boxobj.applyMatrix4( new THREE.Matrix4().makeTranslation(WS2.x,0,0));
+        boxobj.applyMatrix4( new THREE.Matrix4().makeTranslation(trans(),0,0));
+        
             break;	     
         case 100: // 'd'
-        boxobj.applyMatrix4( new THREE.Matrix4().makeTranslation(-WS_dis,0,0));
-        break;	 
+        PS.x=PS.x+10;
+        trans()
+            break;	 
         case 119: // 'w'
-        boxobj.applyMatrix4( new THREE.Matrix4().makeTranslation(0,-pt_y,0));
+        PS.y=PS.y-10;
+        trans()
             break;	 
         case 115: // 's'
-        boxobj.applyMatrix4( new THREE.Matrix4().makeTranslation(0,pt_y,0));
+        PS.y=PS.y+10;
+        trans()
             break;	 
 	}	
 }
@@ -107,4 +123,9 @@ function checkKeyPressed(e) {
 renderer.setAnimationLoop(() => {
     renderer.render(scene, camera);
 });
+
+
+
+
+
 
