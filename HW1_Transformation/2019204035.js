@@ -45,7 +45,8 @@ scene.add(light);
 const deg2rad=3*(Math.PI/180);
 
 const WS=new THREE.Vector3(boxobj.position.x,boxobj.position.y,boxobj.position.z);
-const PS=WS.project(camera).clone();
+console.log(WS);
+const PS=WS.project(camera);
 PS.x=(PS.x+1.0)/2.0*window.innerWidth;
 PS.y=-(PS.y-1.0)/2.0*window.innerHeight;
 console.log(WS);
@@ -53,7 +54,7 @@ function trans()
 {
     const PS2= new THREE.Vector3((PS.x / window.innerWidth) * 2.0 -1.0,-(PS.y / window.innerHeight) * 2.0+1.0,-1);
     const WS2=PS2.unproject(camera).clone();
-    WS2.z=WS.z;
+    
     const dif_vec=WS.distanceTo(WS2);
     console.log(WS);
     console.log(WS2);
