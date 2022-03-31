@@ -7,7 +7,7 @@ renderer.setSize(window.innerWidth,window.innerHeight);
 renderer.setViewport(0,0,window.innerWidth,window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-camera.position.set(0,0,30);
+camera.position.set(0,0,10);
 camera.lookAt(0,0,0);
 camera.up.set(0,1,0);
 
@@ -44,30 +44,42 @@ scene.add(light);
 
 const deg2rad=3*(Math.PI/180);
 
+let prevPS = new THREE.Vector3();
+const PS= new THREE.Vector3( boxobj.position.x, boxobj.position.y, -1);
+// PS.x=(PS.x+1.0)/2.0*window.innerWidth;
+// PS.y=-(PS.y-1.0)/2.0*window.innerHeight;
+console.log(PS);
+let tempPS = PS.clone();
+let WS = PS.unproject(camera).clone();
+let prevWS = prevPS.unproject(camera).clone();   
+console.log(WS);
+
+let V1 = WS.sub(camera.getWorldPosition(new THREE.Vector3(0,0,0)));
+let V2 = prevWS.sub(camera.getWorldPosition(new THREE.Vector3(0,0,0)));
+
 function trans()
 {
-    const PS= new THREE.Vector3( boxobj.position.x, boxobj.position.y, -1);
-    const SS = new THREE.Vector3( (PS.x+1.0)/2.0*window.innerWidth, 
-    -(PS.y-1.0)/2.0*window.innerHeight, -1);
+    let D_PS=camera.localToWorld(new THREE.Vector3(0,0,0)).distanceTo(PS);
+    console.log(D_PS);
+    let D_WS=camera.localToWorld(new THREE.Vector3(0,0,0)).distanceTo(V1);
+    let scale=-D_WS/D_PS;
 
-    const SS2=new THREE.Vector3(SS.x+10,SS.y,-1);
-    const PS2=new THREE.Vector3((SS2.x / window.innerWidth) * 2.0 -1.0,
-    -(SS2.y / window.innerHeight) * 2.0+1.0,-1);
 
-    const D_WS=camera.localToWorld(new THREE.Vector3(0,0,0)).distanceTo(boxobj.position);
-    const D_10px=PS2.distanceTo(PS);
-    const D_real=D_WS*D_10px/0.1;
-    console.log(D_10px);
-    return D_real;
+    // const PS2= new THREE.Vector3((PS.x / window.innerWidth) * 2.0 -1.0,-(PS.y / window.innerHeight) * 2.0+1.0,-1);
+    // const WS2=PS2.unproject(camera).clone();
+    // const dif_vec=boxobj.localToWorld(new THREE.Vector3()).distanceTo(WS2);
+    // console.log(WS2);
+    // console.log(dif_vec);
+    // return dif_vec;
 }
 
 /*
-const D_SS=camera.localToWorld(new THREE.Vector3(0,0,0)).distanceTo(pt1);
+const D_PS=camera.localToWorld(new THREE.Vector3(0,0,0)).distanceTo(pt1);
 const D_WS=camera.localToWorld(new THREE.Vector3(0,0,0)).distanceTo(V1);
-let prev_SS = new THREE.Vector3(pt_x,pt_y,-1);
-let prev_WS = prev_SS.unproject(camera);
-let SS = new THREE.Vector3(pt_x2,pt_y2,-1);
-let WS = SS.unproject(camera);
+let prev_PS = new THREE.Vector3(pt_x,pt_y,-1);
+let prev_WS = prev_PS.unproject(camera);
+let PS = new THREE.Vector3(pt_x2,pt_y2,-1);
+let WS = PS.unproject(camera);
 let V1 = WS.sub(camera.getWorldPosition(new THREE.Vector3(0,0,0)));
 let V2 = prev_WS.sub(camera.getWorldPosition(new THREE.Vector3(0,0,0)));*/
 
@@ -99,23 +111,21 @@ function checkKeyPressed(e) {
         // 2) translation
         case 97: // 'a'
         // boxobj.applyMatrix4( new THREE.Matrix4().makeTranslation(WS_dis,0,0));
-        //SS.x=SS.x-10;
+        //PS.x=PS.x-10;
+        trans();
         // boxobj.applyMatrix4( new THREE.Matrix4().makeTranslation(WS2.x,0,0));
-        //trans()
-        
-        //boxobj.position.x=trans();
-
+        //boxobj.applyMatrix4( new THREE.Matrix4().makeTranslation(trans(),0,0));
             break;	     
         case 100: // 'd'
-        boxobj.applyMatrix4( new THREE.Matrix4().makeTranslation(trans(),0,0));
-        console.log(boxobj.position);
+        PS.x=PS.x+10;
+        trans()
             break;	 
         case 119: // 'w'
-        SS.y=SS.y-10;
+        PS.y=PS.y-10;
         trans()
             break;	 
         case 115: // 's'
-        SS.y=SS.y+10;
+        PS.y=PS.y+10;
         trans()
             break;	 
 	}	
