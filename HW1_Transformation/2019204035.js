@@ -44,22 +44,34 @@ scene.add(light);
 
 const deg2rad=3*(Math.PI/180);
 
-const WS=new THREE.Vector3(boxobj.position.x,boxobj.position.y,boxobj.position.z);
-const PS=WS.project(camera);
-PS.x=(PS.x+1.0)/2.0*window.innerWidth;
-PS.y=-(PS.y-1.0)/2.0*window.innerHeight;
-console.log(WS);
+let prevPS = new THREE.Vector3();
+const PS= new THREE.Vector3( boxobj.position.x, boxobj.position.y, -1);
+// PS.x=(PS.x+1.0)/2.0*window.innerWidth;
+// PS.y=-(PS.y-1.0)/2.0*window.innerHeight;
 console.log(PS);
+let tempPS = PS.clone();
+let WS = PS.unproject(camera).clone();
+let prevWS = prevPS.unproject(camera).clone();   
+console.log(WS);
+
+let V1 = WS.sub(camera.getWorldPosition(new THREE.Vector3(0,0,0)));
+let V2 = prevWS.sub(camera.getWorldPosition(new THREE.Vector3(0,0,0)));
+
+let D_PS=camera.localToWorld(new THREE.Vector3(0,0,0)).distanceTo(PS);
+console.log(D_PS);
 function trans()
 {
-    const PS2= new THREE.Vector3((PS.x / window.innerWidth) * 2.0 -1.0,-(PS.y / window.innerHeight) * 2.0+1.0,-1);
-    const WS2=PS2.unproject(camera).clone();
+    let D_PS=camera.localToWorld(new THREE.Vector3(0,0,0)).distanceTo(PS);
+    let D_WS=camera.localToWorld(new THREE.Vector3(0,0,0)).distanceTo(V1);
+    let scale=-D_WS/D_PS;
     
-    const dif_vec=WS.distanceTo(WS2);
-    console.log(WS);
-    console.log(WS2);
-    console.log(dif_vec);
-    return dif_vec;
+
+    // const PS2= new THREE.Vector3((PS.x / window.innerWidth) * 2.0 -1.0,-(PS.y / window.innerHeight) * 2.0+1.0,-1);
+    // const WS2=PS2.unproject(camera).clone();
+    // const dif_vec=boxobj.localToWorld(new THREE.Vector3()).distanceTo(WS2);
+    // console.log(WS2);
+    // console.log(dif_vec);
+    // return dif_vec;
 }
 
 /*
@@ -101,11 +113,10 @@ function checkKeyPressed(e) {
         case 97: // 'a'
         // boxobj.applyMatrix4( new THREE.Matrix4().makeTranslation(WS_dis,0,0));
         PS.x=PS.x-10;
-        console.log(WS);
         
         // boxobj.applyMatrix4( new THREE.Matrix4().makeTranslation(WS2.x,0,0));
         boxobj.applyMatrix4( new THREE.Matrix4().makeTranslation(trans(),0,0));
-        
+        console.log(boxobj.position);
             break;	     
         case 100: // 'd'
         PS.x=PS.x+10;
