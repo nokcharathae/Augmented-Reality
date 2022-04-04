@@ -48,61 +48,53 @@ const screensizeW=window.innerWidth;
 const screensizeH=window.innerHeight;
 
 console.log(screensizeW, screensizeH);
-const deg2rad=3*(Math.PI/180);
-
+let pos = new THREE.Vector3();
+pos = pos.setFromMatrixPosition(boxobj.matrixWorld);
+pos.project(camera);
+console.log(pos);
 function trans()
 {
     const PS= new THREE.Vector3( boxobj.position.x, boxobj.position.y, -1);
     const SS = new THREE.Vector3( (PS.x+1.0)/2.0*screensizeW, 
     -(PS.y-1.0)/2.0*screensizeH, -1);
-
     const SS2=new THREE.Vector3(SS.x+10,SS.y,-1);
     const PS2=new THREE.Vector3((SS2.x / screensizeW) * 2.0 -1.0,
     -(SS2.y / screensizeH) * 2.0+1.0,-1);
 
     const D_WS=camera.localToWorld(new THREE.Vector3(0,0,0)).distanceTo(boxobj.position);
     const D_10px=PS2.distanceTo(PS);
-    const D_real=D_WS*D_10px/0.1;
+    const D_real=10*D_10px/0.1;
     console.log("SS1 :", SS);
     console.log("SS2 :",SS2);
     console.log("PS1 :",PS);
     console.log("PS2 :",PS2);
+    console.log("D_10px :",D_10px);
     return D_real;
 }
-
-/*
-const D_SS=camera.localToWorld(new THREE.Vector3(0,0,0)).distanceTo(pt1);
-const D_WS=camera.localToWorld(new THREE.Vector3(0,0,0)).distanceTo(V1);
-let prev_SS = new THREE.Vector3(pt_x,pt_y,-1);
-let prev_WS = prev_SS.unproject(camera);
-let SS = new THREE.Vector3(pt_x2,pt_y2,-1);
-let WS = SS.unproject(camera);
-let V1 = WS.sub(camera.getWorldPosition(new THREE.Vector3(0,0,0)));
-let V2 = prev_WS.sub(camera.getWorldPosition(new THREE.Vector3(0,0,0)));*/
 
 window.addEventListener("keypress", checkKeyPressed, false);
 
 function checkKeyPressed(e) {
-    let mat_viewingTrans = new THREE.Matrix4();
+    boxobj.matrixAutoUpdate=false;
 	switch(e.keyCode) {
         // 1) rotation
 		case 114: // 'r'
-        boxobj.rotation.x += deg2rad; 
+        boxobj.applyMatrix4(new THREE.Matrix4().makeRotationX(THREE.MathUtils.degToRad(3)));
 			break;
 		case 116: // 't'
-		boxobj.rotation.y += deg2rad; 
+        boxobj.applyMatrix4(new THREE.Matrix4().makeRotationY(THREE.MathUtils.degToRad(3)));
 			break;
 		case 121: // 'y'
-		boxobj.rotation.z += deg2rad; 
+		boxobj.applyMatrix4(new THREE.Matrix4().makeRotationZ(THREE.MathUtils.degToRad(3)));
 			break;
 		case 102: // 'f'
-        boxobj.rotation.x -= deg2rad; 
+        boxobj.applyMatrix4(new THREE.Matrix4().makeRotationX(THREE.MathUtils.degToRad(-3)));
 			break;	
         case 103: // 'g'
-        boxobj.rotation.y -= deg2rad; 
+        boxobj.applyMatrix4(new THREE.Matrix4().makeRotationY(THREE.MathUtils.degToRad(-3)));
             break;	 
         case 104: // 'h'
-        boxobj.rotation.z -= deg2rad; 
+        boxobj.applyMatrix4(new THREE.Matrix4().makeRotationZ(THREE.MathUtils.degToRad(-3)));
             break;	   
 
         // 2) translation
