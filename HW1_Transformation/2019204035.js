@@ -1,5 +1,7 @@
 import * as THREE from '/node_modules/three/build/three.module.js';
-const camera=new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight,0.1,1000);
+
+
+const camera=new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight,0.1,100);
 const scene=new THREE.Scene();
 
 const renderer = new THREE.WebGLRenderer();
@@ -7,7 +9,7 @@ renderer.setSize(window.innerWidth,window.innerHeight);
 renderer.setViewport(0,0,window.innerWidth,window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-camera.position.set(0,0,30);
+camera.position.set(0,0,10);
 camera.lookAt(0,0,0);
 camera.up.set(0,1,0);
 
@@ -42,22 +44,29 @@ scene.add(light);
  - 's' :  큐브를 화면의 아래쪽 방향으로 10 pix 만큼 평행 이동
 */
 
+const screensizeW=window.innerWidth;
+const screensizeH=window.innerHeight;
+
+console.log(screensizeW, screensizeH);
 const deg2rad=3*(Math.PI/180);
 
 function trans()
 {
     const PS= new THREE.Vector3( boxobj.position.x, boxobj.position.y, -1);
-    const SS = new THREE.Vector3( (PS.x+1.0)/2.0*window.innerWidth, 
-    -(PS.y-1.0)/2.0*window.innerHeight, -1);
+    const SS = new THREE.Vector3( (PS.x+1.0)/2.0*screensizeW, 
+    -(PS.y-1.0)/2.0*screensizeH, -1);
 
     const SS2=new THREE.Vector3(SS.x+10,SS.y,-1);
-    const PS2=new THREE.Vector3((SS2.x / window.innerWidth) * 2.0 -1.0,
-    -(SS2.y / window.innerHeight) * 2.0+1.0,-1);
+    const PS2=new THREE.Vector3((SS2.x / screensizeW) * 2.0 -1.0,
+    -(SS2.y / screensizeH) * 2.0+1.0,-1);
 
     const D_WS=camera.localToWorld(new THREE.Vector3(0,0,0)).distanceTo(boxobj.position);
     const D_10px=PS2.distanceTo(PS);
     const D_real=D_WS*D_10px/0.1;
-    console.log(D_10px);
+    console.log("SS1 :", SS);
+    console.log("SS2 :",SS2);
+    console.log("PS1 :",PS);
+    console.log("PS2 :",PS2);
     return D_real;
 }
 
@@ -108,7 +117,7 @@ function checkKeyPressed(e) {
             break;	     
         case 100: // 'd'
         boxobj.applyMatrix4( new THREE.Matrix4().makeTranslation(trans(),0,0));
-        console.log(boxobj.position);
+        console.log("position",boxobj.position);
             break;	 
         case 119: // 'w'
         SS.y=SS.y-10;
