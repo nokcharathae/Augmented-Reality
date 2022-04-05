@@ -44,91 +44,70 @@ scene.add(light);
  - 's' :  큐브를 화면의 아래쪽 방향으로 10 pix 만큼 평행 이동
 */
 
-const deg2rad=3*(Math.PI/180);
 
-let prevPS = new THREE.Vector3();
-const PS= new THREE.Vector3( boxobj.position.x, boxobj.position.y, -1);
-// PS.x=(PS.x+1.0)/2.0*window.innerWidth;
-// PS.y=-(PS.y-1.0)/2.0*window.innerHeight;
-console.log(PS);
-let tempPS = PS.clone();
-let WS = PS.unproject(camera).clone();
-let prevWS = prevPS.unproject(camera).clone();   
-console.log(WS);
+let screensizeW=window.innerWidth;
+let screensizeH=window.innerHeight;
 
-let V1 = WS.sub(camera.getWorldPosition(new THREE.Vector3(0,0,0)));
-let V2 = prevWS.sub(camera.getWorldPosition(new THREE.Vector3(0,0,0)));
+function trans(a, b){
+    let WS=new THREE.Vector3();
+    WS.setFromMatrixPosition(boxobj.matrixWorld);
+    let PS=WS.project(camera).clone();
+    PS = new THREE.Vector3( (PS.x+1.0)/2.0*screensizeW, 
+    -(PS.y-1.0)/2.0*screensizeH, -1);
+    
+    let PS2=new THREE.Vector3( PS.x+a, PS.y+b, -1);
+    let WS2=new THREE.Vector3((PS2.x / screensizeW) * 2.0 -1.0,
+    -(PS2.y / screensizeH) * 2.0+1.0,-1);
+    WS2.unproject(camera);
 
-function trans()
-{
-    let D_PS=camera.localToWorld(new THREE.Vector3(0,0,0)).distanceTo(PS);
-    console.log(D_PS);
-    let D_WS=camera.localToWorld(new THREE.Vector3(0,0,0)).distanceTo(V1);
-    let scale=-D_WS/D_PS;
+    let tempWS=new THREE.Vector3(WS.x, WS.y,-1);
+    tempWS=tempWS.unproject(camera).clone();
+    
+    let D_WS=camera.localToWorld(new THREE.Vector3(0,0,0)).distanceTo(new THREE.Vector3(0,0,0));
+    let D_PS=0.1;
+    let D_10px=WS2.distanceTo(tempWS);
+    let D_point=D_WS/D_PS*D_10px;
 
-
-    // const PS2= new THREE.Vector3((PS.x / window.innerWidth) * 2.0 -1.0,-(PS.y / window.innerHeight) * 2.0+1.0,-1);
-    // const WS2=PS2.unproject(camera).clone();
-    // const dif_vec=boxobj.localToWorld(new THREE.Vector3()).distanceTo(WS2);
-    // console.log(WS2);
-    // console.log(dif_vec);
-    // return dif_vec;
+    return D_point;
 }
-
-/*
-const D_PS=camera.localToWorld(new THREE.Vector3(0,0,0)).distanceTo(pt1);
-const D_WS=camera.localToWorld(new THREE.Vector3(0,0,0)).distanceTo(V1);
-let prev_PS = new THREE.Vector3(pt_x,pt_y,-1);
-let prev_WS = prev_PS.unproject(camera);
-let PS = new THREE.Vector3(pt_x2,pt_y2,-1);
-let WS = PS.unproject(camera);
-let V1 = WS.sub(camera.getWorldPosition(new THREE.Vector3(0,0,0)));
-let V2 = prev_WS.sub(camera.getWorldPosition(new THREE.Vector3(0,0,0)));*/
 
 window.addEventListener("keypress", checkKeyPressed, false);
 
 function checkKeyPressed(e) {
-    let mat_viewingTrans = new THREE.Matrix4();
+    boxobj.matrixAutoUpdate=false;
 	switch(e.keyCode) {
         // 1) rotation
 		case 114: // 'r'
-        boxobj.rotation.x += deg2rad; 
+        boxobj.applyMatrix4(new THREE.Matrix4().makeRotationX(THREE.MathUtils.degToRad(3)));
 			break;
 		case 116: // 't'
-		boxobj.rotation.y += deg2rad; 
+        boxobj.applyMatrix4(new THREE.Matrix4().makeRotationY(THREE.MathUtils.degToRad(3)));
 			break;
 		case 121: // 'y'
-		boxobj.rotation.z += deg2rad; 
+		boxobj.applyMatrix4(new THREE.Matrix4().makeRotationZ(THREE.MathUtils.degToRad(3)));
 			break;
 		case 102: // 'f'
-        boxobj.rotation.x -= deg2rad; 
+        boxobj.applyMatrix4(new THREE.Matrix4().makeRotationX(THREE.MathUtils.degToRad(-3)));
 			break;	
         case 103: // 'g'
-        boxobj.rotation.y -= deg2rad; 
+        boxobj.applyMatrix4(new THREE.Matrix4().makeRotationY(THREE.MathUtils.degToRad(-3)));
             break;	 
         case 104: // 'h'
-        boxobj.rotation.z -= deg2rad; 
+        boxobj.applyMatrix4(new THREE.Matrix4().makeRotationZ(THREE.MathUtils.degToRad(-3)));
             break;	   
 
         // 2) translation
         case 97: // 'a'
-        // boxobj.applyMatrix4( new THREE.Matrix4().makeTranslation(WS_dis,0,0));
-        //PS.x=PS.x-10;
-        trans();
-        // boxobj.applyMatrix4( new THREE.Matrix4().makeTranslation(WS2.x,0,0));
-        //boxobj.applyMatrix4( new THREE.Matrix4().makeTranslation(trans(),0,0));
+        boxobj.applyMatrix4( new THREE.Matrix4().makeTranslation(-trans(-10,0),0,0));
             break;	     
         case 100: // 'd'
-        PS.x=PS.x+10;
-        trans()
+        boxobj.applyMatrix4( new THREE.Matrix4().makeTranslation(trans(10,0),0,0));
             break;	 
         case 119: // 'w'
-        PS.y=PS.y-10;
-        trans()
+        boxobj.applyMatrix4( new THREE.Matrix4().makeTranslation(0,trans(0,10),0));
             break;	 
         case 115: // 's'
-        PS.y=PS.y+10;
-        trans()
+        boxobj.applyMatrix4( new THREE.Matrix4().makeTranslation(0,-trans(0,-10),0));
             break;	 
 	}	
 }

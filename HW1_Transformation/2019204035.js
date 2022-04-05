@@ -1,7 +1,7 @@
 import * as THREE from '/node_modules/three/build/three.module.js';
 
 
-const camera=new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight,0.1,100);
+const camera=new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight,0.1,1000);
 const scene=new THREE.Scene();
 
 const renderer = new THREE.WebGLRenderer();
@@ -44,32 +44,31 @@ scene.add(light);
  - 's' :  큐브를 화면의 아래쪽 방향으로 10 pix 만큼 평행 이동
 */
 
-const screensizeW=window.innerWidth;
-const screensizeH=window.innerHeight;
 
-console.log(screensizeW, screensizeH);
-let pos = new THREE.Vector3();
-pos = pos.setFromMatrixPosition(boxobj.matrixWorld);
-pos.project(camera);
-console.log(pos);
-function trans()
-{
-    const PS= new THREE.Vector3( boxobj.position.x, boxobj.position.y, -1);
-    const SS = new THREE.Vector3( (PS.x+1.0)/2.0*screensizeW, 
+let screensizeW=window.innerWidth;
+let screensizeH=window.innerHeight;
+
+function trans(a, b){
+    let WS=new THREE.Vector3();
+    WS.setFromMatrixPosition(boxobj.matrixWorld);
+    let PS=WS.project(camera).clone();
+    PS = new THREE.Vector3( (PS.x+1.0)/2.0*screensizeW, 
     -(PS.y-1.0)/2.0*screensizeH, -1);
-    const SS2=new THREE.Vector3(SS.x+10,SS.y,-1);
-    const PS2=new THREE.Vector3((SS2.x / screensizeW) * 2.0 -1.0,
-    -(SS2.y / screensizeH) * 2.0+1.0,-1);
+    
+    let PS2=new THREE.Vector3( PS.x+a, PS.y+b, -1);
+    let WS2=new THREE.Vector3((PS2.x / screensizeW) * 2.0 -1.0,
+    -(PS2.y / screensizeH) * 2.0+1.0,-1);
+    WS2.unproject(camera);
 
-    const D_WS=camera.localToWorld(new THREE.Vector3(0,0,0)).distanceTo(boxobj.position);
-    const D_10px=PS2.distanceTo(PS);
-    const D_real=10*D_10px/0.1;
-    console.log("SS1 :", SS);
-    console.log("SS2 :",SS2);
-    console.log("PS1 :",PS);
-    console.log("PS2 :",PS2);
-    console.log("D_10px :",D_10px);
-    return D_real;
+    let tempWS=new THREE.Vector3(WS.x, WS.y,-1);
+    tempWS=tempWS.unproject(camera).clone();
+    
+    let D_WS=camera.localToWorld(new THREE.Vector3(0,0,0)).distanceTo(new THREE.Vector3(0,0,0));
+    let D_PS=0.1;
+    let D_10px=WS2.distanceTo(tempWS);
+    let D_point=D_WS/D_PS*D_10px;
+
+    return D_point;
 }
 
 window.addEventListener("keypress", checkKeyPressed, false);
@@ -99,25 +98,16 @@ function checkKeyPressed(e) {
 
         // 2) translation
         case 97: // 'a'
-        // boxobj.applyMatrix4( new THREE.Matrix4().makeTranslation(WS_dis,0,0));
-        //SS.x=SS.x-10;
-        // boxobj.applyMatrix4( new THREE.Matrix4().makeTranslation(WS2.x,0,0));
-        //trans()
-        
-        //boxobj.position.x=trans();
-
+        boxobj.applyMatrix4( new THREE.Matrix4().makeTranslation(-trans(-10,0),0,0));
             break;	     
         case 100: // 'd'
-        boxobj.applyMatrix4( new THREE.Matrix4().makeTranslation(trans(),0,0));
-        console.log("position",boxobj.position);
+        boxobj.applyMatrix4( new THREE.Matrix4().makeTranslation(trans(10,0),0,0));
             break;	 
         case 119: // 'w'
-        SS.y=SS.y-10;
-        trans()
+        boxobj.applyMatrix4( new THREE.Matrix4().makeTranslation(0,trans(0,10),0));
             break;	 
         case 115: // 's'
-        SS.y=SS.y+10;
-        trans()
+        boxobj.applyMatrix4( new THREE.Matrix4().makeTranslation(0,-trans(0,-10),0));
             break;	 
 	}	
 }
