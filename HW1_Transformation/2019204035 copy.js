@@ -75,6 +75,7 @@ window.addEventListener("keypress", checkKeyPressed, false);
 
 function checkKeyPressed(e) {
     boxobj.matrixAutoUpdate=false;
+    boxobj.matrixWorldNeedsUpdate = true;
 	switch(e.keyCode) {
         // 1) rotation
 		case 114: // 'r'
