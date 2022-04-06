@@ -14,7 +14,7 @@ camera.up.set(0,1,0);
 
 const geo_box = new THREE.BoxGeometry(5,5,5);
 const loader = new THREE.TextureLoader();
-const material = new THREE.MeshPhongMaterial({
+const material = new THREE.MeshLambertMaterial ({
   map: loader.load('black.png'),
 });
 const boxobj=new THREE.Mesh(geo_box,material);
