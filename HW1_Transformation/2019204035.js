@@ -14,13 +14,13 @@ camera.up.set(0,1,0);
 
 const geo_box = new THREE.BoxGeometry(5,5,5);
 const loader = new THREE.TextureLoader();
-const material = new THREE.MeshLambertMaterial ({
+const material = new THREE.MeshBasicMaterial ({
   map: loader.load('black.png'),
 });
 const boxobj=new THREE.Mesh(geo_box,material);
 
 const light = new THREE.DirectionalLight(0xffffff, 1);
-light.position.set(0, 50, 50);
+light.position.set(-50, 50, 50);
 
 scene.add(boxobj);
 scene.add(light);
@@ -58,10 +58,9 @@ window.addEventListener("keypress", checkKeyPressed, false);
 function checkKeyPressed(e) {
     boxobj.matrixAutoUpdate=false;
     boxobj.matrixWorldNeedsUpdate = true;
-    let objectmat=new THREE.Matrix4();
+    let objectmat=boxobj.matrix;
     let mat_r=new THREE.Matrix4();
     let mat_t=new THREE.Matrix4();
-    objectmat=boxobj.matrix;
 
 	switch(e.keyCode) {
         // 1) rotation
