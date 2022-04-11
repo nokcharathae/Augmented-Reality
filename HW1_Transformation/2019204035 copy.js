@@ -1,7 +1,8 @@
 import * as THREE from '/node_modules/three/build/three.module.js';
-
+import { OrbitControls } from '/node_modules/three/examples/jsm/controls/OrbitControls.js'
 
 const camera=new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight,0.1,1000);
+
 const scene=new THREE.Scene();
 
 const renderer = new THREE.WebGLRenderer();
@@ -9,9 +10,11 @@ renderer.setSize(window.innerWidth,window.innerHeight);
 renderer.setViewport(0,0,window.innerWidth,window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-camera.position.set(0,0,10);
-camera.lookAt(0,0,0);
-camera.up.set(0,1,0);
+// camera.position.set(0,0,10);
+// camera.lookAt(0,0,0);
+// camera.up.set(0,1,0);
+
+const controls = new THREE.OrbitControls(camera);
 
 const goe_box = new THREE.BoxGeometry(5,5,5);
 const loader = new THREE.TextureLoader();
@@ -43,7 +46,6 @@ scene.add(light);
  - 'w' :  큐브를 화면의 위쪽 방향으로 10 pix 만큼 평행 이동
  - 's' :  큐브를 화면의 아래쪽 방향으로 10 pix 만큼 평행 이동
 */
-
 
 let screensizeW=window.innerWidth;
 let screensizeH=window.innerHeight;
@@ -113,10 +115,17 @@ function checkKeyPressed(e) {
 	}	
 }
 
-renderer.setAnimationLoop(() => {
-    renderer.render(scene, camera);
-});
+function animate() {
 
+	requestAnimationFrame(animate);
+
+            renderer.render(scene, camera);
+            controls.update(); // 마우스로인해 변경된 카메라값을 업데이트 합니다.
+
+
+}
+
+animate();
 
 
 
