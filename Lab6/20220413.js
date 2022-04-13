@@ -3,6 +3,24 @@ const videoElement = document.getElementsByClassName('input_video')[0];
 const canvasElement = document.getElementsByClassName('output_canvas')[0];
 const canvasCtx = canvasElement.getContext('2d');
 
+import * as THREE from '/node_modules/three/build/three.module.js';
+import { OrbitControls } from '/node_modules/three/examples/jsm/controls/OrbitControls.js';
+
+const renderer = new THREE.WebGLRenderer();
+const render_W=640;
+const render_H=480;
+renderer.setSize(render_W,render_H);
+renderer.setViewport(0,0,render_W,render_H);
+document.body.appendChild(renderer.domElement);
+
+const camera_ar=new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight,0.1,500);
+camera_ar.position.set(0,0,100);
+camera_ar.lookAt(0,0,0);
+camera_ar.up.set(0,1,0);
+
+const controls=new OrbitControls(camera, renderer.domElement);
+
+// opengl ndc -1 ~ 1
 function onResults(results) {
   canvasCtx.save();
   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
@@ -34,13 +52,27 @@ faceMesh.setOptions({
   minDetectionConfidence: 0.5,
   minTrackingConfidence: 0.5
 });
+
+// callback
 faceMesh.onResults(onResults);
 
-const camera = new Camera(videoElement, {
-  onFrame: async () => {
-    await faceMesh.send({image: videoElement});
-  },
-  width: 1280,
-  height: 720
-});
-camera.start();
+// 카메라 정보 변경
+// 매프레임 마다 수행
+// const camera = new Camera(videoElement, {
+//   onFrame: async () => {
+//     await faceMesh.send({image: videoElement});
+//   },
+//   width: 1280,
+//   height: 720
+// });
+// camera.start();
+
+videoElement.play();
+
+async function detectionFrame(now,metadata){
+  await faceMesh.send({image: videoElement});
+}
+
+videoElement.requestVideoFrameCallback(detectionFrame);
+
+detectionFrame();
