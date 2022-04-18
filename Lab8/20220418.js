@@ -50,33 +50,39 @@ function onResults(results) {
 
       // FACEMESH_FACE_OVAL, landmarks
       if(point_mesh==null){
-        let oval_point_geo=new THREE.BufferGeometry();
         const num_oval_points=FACEMESH_FACE_OVAL.length;
         const oval_vertices =[];
-        // const oval_vertices = new Float32Array( num_oval_points );
-        for(let i=0;i<num_oval_points;i++){
-          const index=FACEMESH_FACE_OVAL[i][0];
+        for(let i=0;i<=num_oval_points;i++){
+          let index;
+          if(i==num_oval_points){
+            index=FACEMESH_FACE_OVAL[0][0];
+          }
+          else{
+            index=FACEMESH_FACE_OVAL[i][0];
+          }
           const pos_ns=landmarks[index];
           const pos_ps=new THREE.Vector3((pos_ns.x-0.5)*2,-(pos_ns.y-0.5)*2,pos_ns.z);
           let pos_ws=new THREE.Vector3(pos_ps.x,pos_ps.y,pos_ps.z).unproject(camera_ar);
-          // oval_vertices[i]=pos_ws;
           oval_vertices.push(pos_ws.x,pos_ws.y,pos_ws.z);
         }
-        const poin_mat=new THREE.PointsMaterial({color:0xFF0000,size:0.02});
-        //oval_point_geo.setFromPoints(oval_vertices);
-        // Float32BufferAttribute = array
-        oval_point_geo.setAttribute('position',new THREE.Float32BufferAttribute(oval_vertices,3));
-        point_mesh=new THREE.Points(oval_point_geo, poin_mat);
+        const poin_mat=new THREE.LineBasicMaterial({color:0xFF0000});
+        let oval_point_geo=new THREE.BufferGeometry().setAttribute('position',new THREE.Float32BufferAttribute(oval_vertices,3));
+        point_mesh=new THREE.Line(oval_point_geo, poin_mat);
         scene.add(point_mesh);
       }
       const num_oval_points=FACEMESH_FACE_OVAL.length;
       let positions=point_mesh.geometry.attributes.position.array;
-      for(let i=0;i<num_oval_points;i++){
-        const index=FACEMESH_FACE_OVAL[i][0];
+      for(let i=0;i<=num_oval_points;i++){
+        let index;
+        if(i==num_oval_points){
+          index=FACEMESH_FACE_OVAL[0][0];
+        }
+        else{
+          index=FACEMESH_FACE_OVAL[i][0];
+        }
         const pos_ns=landmarks[index];
         const pos_ps=new THREE.Vector3((pos_ns.x-0.5)*2,-(pos_ns.y-0.5)*2,pos_ns.z);
         let pos_ws=new THREE.Vector3(pos_ps.x,pos_ps.y,pos_ps.z).unproject(camera_ar);
-        // oval_vertices[i]=pos_ws;
         positions[3*i+0]=pos_ws.x;
         positions[3*i+1]=pos_ws.y;
         positions[3*i+2]=pos_ws.z;
