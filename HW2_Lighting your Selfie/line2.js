@@ -36,7 +36,7 @@ let point_mesh;
 
 let lines;
 const mgeometry = new LineGeometry();
-const mmaterial = new LineMaterial( { color: 0xff00ff, linewidth: 2 } );
+const mmaterial = new LineMaterial( { color: 0xff00ff, linewidth: 10 } );
 
 function onResults(results) {
   canvasCtx.save();
