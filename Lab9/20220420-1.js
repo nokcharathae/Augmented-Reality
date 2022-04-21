@@ -93,7 +93,7 @@ function onResults(results) {
       }
       const num_oval_points=FACEMESH_FACE_OVAL.length;
       let positions=oval_point_mesh.geometry.attributes.position.array;
-      for(let i=0;i<num_oval_points;i++){
+      for(let i=0;i<num_oval_points;i++){ 
         const index=FACEMESH_FACE_OVAL[i][0];
         const pos_ns=landmarks[index];
         const pos_ps=new THREE.Vector3((pos_ns.x-0.5)*2,-(pos_ns.y-0.5)*2,pos_ns.z);
