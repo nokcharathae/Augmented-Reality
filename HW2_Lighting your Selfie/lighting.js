@@ -29,7 +29,7 @@ scene.background = texture_bg;
 
 let lines;
 const mgeometry = new LineGeometry();
-const mmaterial = new LineMaterial( { color: 0xff00ff, linewidth: 10 } );
+const mmaterial = new LineMaterial( { color: 0xff00ff, linewidth: 2 } );
 
 let oval_point_mesh=null;
 let face_mesh=null;
@@ -70,7 +70,7 @@ function onResults(results) {
           let pos_ws=new THREE.Vector3(pos_ps.x,pos_ps.y,pos_ps.z).unproject(camera_ar);
           oval_vertices.push(pos_ws.x,pos_ws.y,pos_ws.z);
         }
-        const poin_mat=new THREE.PointsMaterial({color:0xFF0000,size:0.02});
+        const poin_mat=new THREE.PointsMaterial({color:0xFF0000,size:0.1});
         oval_point_geo.setAttribute('position',new THREE.Float32BufferAttribute(oval_vertices,3));
         oval_point_mesh=new THREE.Points(oval_point_geo, poin_mat);
         scene.add(oval_point_mesh);
@@ -78,7 +78,8 @@ function onResults(results) {
         // line2
 
         mgeometry.setPositions( oval_vertices );
-        mmaterial.resolution.set( window.innerWidth, window.innerHeight );
+        // resolution of the inset viewport
+        mmaterial.resolution.set( render_w, render_h );
         lines = new Line2( mgeometry, mmaterial );
         //lines.computeLineDistances();
         scene.add( lines );
