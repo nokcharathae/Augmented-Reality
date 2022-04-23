@@ -16,13 +16,19 @@ const render_h=480;
 renderer.setSize(render_w,render_h);
 renderer.setViewport(0,0,render_w,render_h);
 document.body.appendChild(renderer.domElement);
+const near = 1;
+const far=500;
 
-const camera_ar=new THREE.PerspectiveCamera(45, render_w/render_h,1,500);
+const camera_ar=new THREE.PerspectiveCamera(45, render_w/render_h,near,far);
 camera_ar.position.set(0,0,100);
 camera_ar.lookAt(0,0,0);
 camera_ar.up.set(0,1,0);
 
 const scene=new THREE.Scene();
+
+renderer.domElement.addEventListener("mousedown", mouseDownHandler, false);
+renderer.domElement.addEventListener("mousemove", mouseMoveHandler, false);
+renderer.domElement.addEventListener('mouseup', mouseUpHandler, false);
 
 let controls;
 
@@ -31,7 +37,7 @@ scene.background = texture_video;
 
 const light=new THREE.DirectionalLight(0xffffff,1.0);
 const amb_light=new THREE.AmbientLight(0xffffff,0.5);
-light.position.set(0,0,100);
+light.position.set(0,0,camera_ar.position.z-near);
 scene.add(light);
 scene.add(amb_light);
 
@@ -41,6 +47,30 @@ const mmaterial = new LineMaterial( { color: 0x00ffff, linewidth: 2 } );
 
 let oval_point_mesh=null;
 let face_mesh=null;
+
+let mouseX = 0;
+let mouseY = 0;
+let down=0;
+
+function mouseDownHandler(e) {
+  down=1;
+  mouseX = ( e.clientX - render_w/2 );
+	mouseY = -( e.clientY - render_h/2 );
+  light.position.set(mouseX,mouseY,camera_ar.position.z-near);
+}
+
+function mouseMoveHandler(e) {
+  if (down==1){
+    mouseX = ( e.clientX - render_w/2 );
+    mouseY = -( e.clientY - render_h/2 );
+    light.position.set(mouseX,mouseY,camera_ar.position.z-near);
+  }
+}
+
+function mouseUpHandler(e) {
+  down=0;
+}
+
 
 function ProjScale(p_ms,cam_pos,src_d,dst_d){
   let vec_cam2p=new THREE.Vector3().subVectors(p_ms,cam_pos);
@@ -65,22 +95,23 @@ activeCamera = cameraPerspective;
 activeHelper = cameraPerspectiveHelper;
 
 
-controls
+// controls
 
-controls = new OrbitControls( camera_ar, renderer.domElement );
-controls.listenToKeyEvents( window ); // optional
+// controls = new OrbitControls( camera_ar, renderer.domElement );
+// controls.listenToKeyEvents( window ); // optional
 
-//controls.addEventListener( 'change', render ); // call this only in static scenes (i.e., if there is no animation loop)
+// //controls.addEventListener( 'change', render ); // call this only in static scenes (i.e., if there is no animation loop)
 
-controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
-controls.dampingFactor = 0.05;
+// controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
+// controls.dampingFactor = 0.05;
 
-controls.screenSpacePanning = false;
+// controls.screenSpacePanning = false;
 
-controls.minDistance = 100;
-controls.maxDistance = 500;
+// controls.minDistance = 100;
+// controls.maxDistance = 500;
 
-controls.maxPolarAngle = Math.PI / 2;
+// controls.maxPolarAngle = Math.PI / 2;
+
 
 function onResults(results) {
   //canvasCtx.save();
@@ -196,6 +227,8 @@ function onResults(results) {
       light.target=face_mesh;
 
       //camera
+
+
       cameraOrtho.rotation.y = Math.PI;
       cameraPerspective.rotation.y = Math.PI;
 
