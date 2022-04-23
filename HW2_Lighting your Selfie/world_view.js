@@ -1,7 +1,5 @@
 // 비디오 스크리밍으로 입력
 const videoElement = document.getElementsByClassName('input_video')[0];
-//const canvasElement = document.getElementsByClassName('output_canvas')[0];
-//const canvasCtx = canvasElement.getContext('2d');
 
 import * as THREE from '/node_modules/three/build/three.module.js';
 import { OrbitControls } from '/node_modules/three/examples/jsm/controls/OrbitControls.js'
@@ -16,13 +14,25 @@ const render_h=480;
 renderer.setSize(render_w,render_h);
 renderer.setViewport(0,0,render_w,render_h);
 document.body.appendChild(renderer.domElement);
-const near = 1;
-const far=500;
+
+const renderer_world = new THREE.WebGLRenderer();
+renderer_world.setSize(render_w,render_h);
+renderer_world.setViewport(0,0,render_w,render_h);
+document.body.appendChild(renderer_world.domElement);
+
+const near = 10;
+const far=150;
 
 const camera_ar=new THREE.PerspectiveCamera(45, render_w/render_h,near,far);
 camera_ar.position.set(0,0,100);
 camera_ar.lookAt(0,0,0);
 camera_ar.up.set(0,1,0);
+
+const camera_wolrd=new THREE.PerspectiveCamera(75, render_w/render_h,0.05,1000);
+camera_wolrd.position.set(35,0,150);
+camera_wolrd.lookAt(0,0,0);
+camera_wolrd.up.set(0,1,0);
+
 
 const scene=new THREE.Scene();
 
@@ -37,9 +47,11 @@ scene.background = texture_video;
 
 const light=new THREE.DirectionalLight(0xffffff,1.0);
 const amb_light=new THREE.AmbientLight(0xffffff,0.5);
-light.position.set(0,0,camera_ar.position.z-near);
+light.position.set(0,0,near);
+const light_helper = new THREE.DirectionalLightHelper( light, 0 );
 scene.add(light);
 scene.add(amb_light);
+scene.add( light_helper );
 
 let lines;
 const mgeometry = new LineGeometry();
@@ -52,18 +64,32 @@ let mouseX = 0;
 let mouseY = 0;
 let down=0;
 
+const p_c=new THREE.Vector3(0,0,0).unproject(camera_ar);
+const vec_cam2center=new THREE.Vector3().subVectors(p_c,camera_ar.position);
+const center_dist=vec_cam2center.length();
+
 function mouseDownHandler(e) {
   down=1;
   mouseX = ( e.clientX - render_w/2 );
 	mouseY = -( e.clientY - render_h/2 );
-  light.position.set(mouseX,mouseY,camera_ar.position.z-near);
+  
+  const pos_ps=new THREE.Vector3(mouseX,-mouseY,-1);
+  let pos_ws=new THREE.Vector3(pos_ps.x,pos_ps.y,pos_ps.z).unproject(camera_ar);
+  pos_ws=ProjScale(pos_ws,camera_ar.position,center_dist,1); 
+  light.position.set(pos_ws); 
 }
 
 function mouseMoveHandler(e) {
   if (down==1){
+    
     mouseX = ( e.clientX - render_w/2 );
     mouseY = -( e.clientY - render_h/2 );
-    light.position.set(mouseX,mouseY,camera_ar.position.z-near);
+    const pos_ps=new THREE.Vector3((e.clientX / render_w) * 2.0 -1.0,
+    -(e.clientY / render_h) * 2.0+1.0,-1);
+    let pos_ws=new THREE.Vector3(pos_ps.x,pos_ps.y,pos_ps.z).unproject(camera_ar);
+    pos_ws=ProjScale(pos_ws,camera_ar.position,center_dist,1); 
+    light.position.set(pos_ws.x,pos_ws.y,near); 
+    console.log(pos_ws);
   }
 }
 
@@ -77,61 +103,32 @@ function ProjScale(p_ms,cam_pos,src_d,dst_d){
   return new THREE.Vector3().addVectors(cam_pos,vec_cam2p.multiplyScalar(dst_d/src_d));
 }
 
-let cameraRig, activeCamera, activeHelper;
-let cameraPerspective, cameraOrtho;
-let cameraPerspectiveHelper, cameraOrthoHelper;
+let cameraPerspectiveHelper;
 const aspect=render_w/render_h;
-const frustumSize = 600;
-cameraPerspective = new THREE.PerspectiveCamera( 50, 0.5 * aspect, 150, 1000);
-cameraPerspectiveHelper = new THREE.CameraHelper( cameraPerspective );
-//scene.add( cameraPerspectiveHelper );
 
-cameraOrtho = new THREE.OrthographicCamera( 0.5 * frustumSize * aspect / - 2, 0.5 * frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2, 150, 1000 );
-
-cameraOrthoHelper = new THREE.CameraHelper( cameraOrtho );
-//scene.add( cameraOrthoHelper );
-
-activeCamera = cameraPerspective;
-activeHelper = cameraPerspectiveHelper;
+cameraPerspectiveHelper = new THREE.CameraHelper( camera_ar );
+scene.add( cameraPerspectiveHelper );
 
 
-// controls
+controls = new OrbitControls( camera_ar, renderer_world.domElement );
+controls.listenToKeyEvents( renderer_world.domElement ); // optional
 
-// controls = new OrbitControls( camera_ar, renderer.domElement );
-// controls.listenToKeyEvents( window ); // optional
+//controls.addEventListener( 'change', render ); // call this only in static scenes (i.e., if there is no animation loop)
 
-// //controls.addEventListener( 'change', render ); // call this only in static scenes (i.e., if there is no animation loop)
+controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
+controls.dampingFactor = 0.05;
 
-// controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
-// controls.dampingFactor = 0.05;
+controls.screenSpacePanning = false;
 
-// controls.screenSpacePanning = false;
+controls.minDistance = 100;
+controls.maxDistance = 500;
 
-// controls.minDistance = 100;
-// controls.maxDistance = 500;
-
-// controls.maxPolarAngle = Math.PI / 2;
+controls.maxPolarAngle = Math.PI / 2;
 
 
 function onResults(results) {
-  //canvasCtx.save();
-  //canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-  //canvasCtx.drawImage(
-      //results.image, 0, 0, canvasElement.width, canvasElement.height);
   if (results.multiFaceLandmarks) {
-    for (const landmarks of results.multiFaceLandmarks) {
-       
-      // drawConnectors(canvasCtx, landmarks, FACEMESH_TESSELATION,
-      //                {color: '#C0C0C070', lineWidth: 1});
-      // drawConnectors(canvasCtx, landmarks, FACEMESH_RIGHT_EYE, {color: '#FF3030'});
-      // drawConnectors(canvasCtx, landmarks, FACEMESH_RIGHT_EYEBROW, {color: '#FF3030'});
-      // drawConnectors(canvasCtx, landmarks, FACEMESH_RIGHT_IRIS, {color: '#FF3030'});
-      // drawConnectors(canvasCtx, landmarks, FACEMESH_LEFT_EYE, {color: '#30FF30'});
-      // drawConnectors(canvasCtx, landmarks, FACEMESH_LEFT_EYEBROW, {color: '#30FF30'});
-      // drawConnectors(canvasCtx, landmarks, FACEMESH_LEFT_IRIS, {color: '#30FF30'});
-      // drawConnectors(canvasCtx, landmarks, FACEMESH_FACE_OVAL, {color: '#E0E0E0'});
-      // drawConnectors(canvasCtx, landmarks, FACEMESH_LIPS, {color: '#E0E0E0'});  
-    
+    for (const landmarks of results.multiFaceLandmarks) {    
 
       // FACEMESH_FACE_OVAL, landmarks
       if(oval_point_mesh==null){
@@ -175,10 +172,6 @@ function onResults(results) {
         face_mesh.geometry.setIndex(TRIANGULATION);
         scene.add(face_mesh);
       }
-
-      const p_c=new THREE.Vector3(0,0,0).unproject(camera_ar);
-      const vec_cam2center=new THREE.Vector3().subVectors(p_c,camera_ar.position);
-      const center_dist=vec_cam2center.length();
 
       const num_oval_points=FACEMESH_FACE_OVAL.length;
       let positions=oval_point_mesh.geometry.attributes.position.array;
@@ -226,22 +219,22 @@ function onResults(results) {
 
       light.target=face_mesh;
 
-      //camera
-
-
-      cameraOrtho.rotation.y = Math.PI;
-      cameraPerspective.rotation.y = Math.PI;
-
-      cameraRig = new THREE.Group();
-
-      cameraRig.add( cameraPerspective );
-      cameraRig.add( cameraOrtho );
-
-      scene.add( cameraRig );
       
+
+      //camera
+      
+      scene.background = texture_video;
+      scene.remove(cameraPerspectiveHelper);
+      scene.remove(light_helper);
+      renderer.render(scene, camera_ar);
+
+      scene.background=null;
+      scene.add(cameraPerspectiveHelper);
+      scene.add(light_helper);
+      renderer_world.render(scene, camera_wolrd);
     }
   }
-  renderer.render(scene, camera_ar);
+
   //canvasCtx.restore();
 }
 
