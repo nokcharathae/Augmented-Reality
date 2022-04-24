@@ -1,4 +1,3 @@
-// 비디오 스크리밍으로 입력
 const videoElement = document.getElementsByClassName('input_video')[0];
 
 import * as THREE from '/node_modules/three/build/three.module.js';
@@ -8,6 +7,7 @@ import { LineMaterial } from '/node_modules/three/examples/jsm/lines/LineMateria
 import { LineGeometry } from '/node_modules/three/examples/jsm/lines/LineGeometry.js';
 import { TRIANGULATION } from './triangulation.js';
 
+// renderer
 const renderer = new THREE.WebGLRenderer();
 const render_w=640;
 const render_h=480;
@@ -15,20 +15,20 @@ renderer.setSize(render_w,render_h);
 renderer.setViewport(0,0,render_w,render_h);
 document.body.appendChild(renderer.domElement);
 
-const renderer_world = new THREE.WebGLRenderer();
+const canvas = document.querySelector('#c');
+const renderer_world = new THREE.WebGLRenderer({canvas});
 renderer_world.setSize(render_w,render_h);
 renderer_world.setViewport(0,0,render_w,render_h);
 document.body.appendChild(renderer_world.domElement);
 
+// scene
 const scene=new THREE.Scene();
+const texture_video=new THREE.VideoTexture(videoElement);
+scene.background = texture_video;
 
+// camera
 const near = 80;
 const far=500;
-
-renderer.domElement.addEventListener("mousedown", mouseDownHandler, false);
-renderer.domElement.addEventListener("mousemove", mouseMoveHandler, false);
-document.addEventListener('mouseup', mouseUpHandler, false);
-renderer.domElement.addEventListener("wheel", mouseWheel, false);
 
 const camera_ar=new THREE.PerspectiveCamera(45, render_w/render_h,near,far);
 camera_ar.position.set(0,0,100);
@@ -48,6 +48,7 @@ camera_wolrd.up.set(0,1,0);
 const cameraPerspectiveHelper= new THREE.CameraHelper( camera_perspective );
 scene.add( cameraPerspectiveHelper );
 
+// light
 const light=new THREE.DirectionalLight(0xffffff,1.0);
 const amb_light=new THREE.AmbientLight(0xffffff,0.5);
 light.position.set(0,0,camera_ar.position.z-near);
@@ -57,6 +58,7 @@ scene.add(light);
 scene.add(amb_light);
 scene.add( light_helper );
 
+// point, line, face_mesh
 let lines;
 const mgeometry = new LineGeometry();
 const mmaterial = new LineMaterial( { color: 0x00ffff, linewidth: 2 } );
@@ -64,9 +66,7 @@ const mmaterial = new LineMaterial( { color: 0x00ffff, linewidth: 2 } );
 let oval_point_mesh=null;
 let face_mesh=null;
 
-const texture_video=new THREE.VideoTexture(videoElement);
-scene.background = texture_video;
-
+// far plane
 const hFar = 2 * Math.tan(camera_perspective.fov * Math.PI / 180 / 2) * camera_perspective.far; // height
 const wFar = hFar * camera_perspective.aspect; // width
 
@@ -76,14 +76,11 @@ const plane = new THREE.Mesh( plane_geometry, plane_material );
 plane.position.set(0,0,camera_ar.position.z-far);
 plane.lookAt(camera_ar.position);
 
-const p_c=new THREE.Vector3(0,0,0).unproject(camera_ar);
-const vec_cam2center=new THREE.Vector3().subVectors(p_c,camera_ar.position);
-const center_dist=vec_cam2center.length();
-
-function ProjScale(p_ms,cam_pos,src_d,dst_d){
-  let vec_cam2p=new THREE.Vector3().subVectors(p_ms,cam_pos);
-  return new THREE.Vector3().addVectors(cam_pos,vec_cam2p.multiplyScalar(dst_d/src_d));
-}
+// mouse event
+renderer.domElement.addEventListener("mousedown", mouseDownHandler, false);
+renderer.domElement.addEventListener("mousemove", mouseMoveHandler, false);
+document.addEventListener('mouseup', mouseUpHandler, false);
+renderer.domElement.addEventListener("wheel", mouseWheel, false);
 
 let down=0;
 let light_pos_ps=new THREE.Vector3(light.position.x,light.position.y,-1);
@@ -126,21 +123,21 @@ function mouseWheel(e) {
   light_update();
 }
 
-let controls;
-
-controls = new OrbitControls( camera_wolrd, renderer_world.domElement );
+// OrbitControls
+const controls = new OrbitControls( camera_wolrd, renderer_world.domElement );
 controls.listenToKeyEvents( renderer_world.domElement ); // optional
-
-//controls.addEventListener( 'change', renderer_world ); // call this only in static scenes (i.e., if there is no animation loop)
-
 controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
 controls.dampingFactor = 0.05;
 
-//controls.screenSpacePanning = false;
-//controls.minDistance = 100;
-//controls.maxDistance = 500;
-//controls.maxPolarAngle = Math.PI / 2;
+// initialize
+const p_c=new THREE.Vector3(0,0,0).unproject(camera_ar);
+const vec_cam2center=new THREE.Vector3().subVectors(p_c,camera_ar.position);
+const center_dist=vec_cam2center.length();
 
+function ProjScale(p_ms,cam_pos,src_d,dst_d){
+  let vec_cam2p=new THREE.Vector3().subVectors(p_ms,cam_pos);
+  return new THREE.Vector3().addVectors(cam_pos,vec_cam2p.multiplyScalar(dst_d/src_d));
+}
 
 function onResults(results) {
   if (results.multiFaceLandmarks) {
@@ -169,7 +166,6 @@ function onResults(results) {
         scene.add(oval_point_mesh);
 
         // line2
-
         mgeometry.setPositions( oval_vertices );
         mmaterial.resolution.set( render_w, render_h );
         lines = new Line2( mgeometry, mmaterial );
@@ -250,7 +246,7 @@ function onResults(results) {
       scene.remove(cameraPerspectiveHelper);
       scene.remove(light_helper);
       scene.remove( plane );
-      renderer.render(scene, camera_ar);
+      renderer.render(scene, camera_perspective);
 
       scene.background=null;
       scene.add(cameraPerspectiveHelper);
