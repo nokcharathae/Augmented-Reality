@@ -20,34 +20,38 @@ renderer_world.setSize(render_w,render_h);
 renderer_world.setViewport(0,0,render_w,render_h);
 document.body.appendChild(renderer_world.domElement);
 
-const near = 10;
-const far=150;
+const scene=new THREE.Scene();
+
+const near = 80;
+const far=500;
+
+renderer.domElement.addEventListener("mousedown", mouseDownHandler, false);
+renderer.domElement.addEventListener("mousemove", mouseMoveHandler, false);
+document.addEventListener('mouseup', mouseUpHandler, false);
+renderer.domElement.addEventListener("wheel", mouseWheel, false);
 
 const camera_ar=new THREE.PerspectiveCamera(45, render_w/render_h,near,far);
 camera_ar.position.set(0,0,100);
 camera_ar.lookAt(0,0,0);
 camera_ar.up.set(0,1,0);
 
-const camera_wolrd=new THREE.PerspectiveCamera(75, render_w/render_h,0.05,1000);
-camera_wolrd.position.set(35,0,150);
+const camera_perspective=new THREE.PerspectiveCamera(45, render_w/render_h,near,far);
+camera_perspective.position.set(0,0,100);
+camera_perspective.lookAt(0,0,0);
+camera_perspective.up.set(0,1,0);
+
+const camera_wolrd=new THREE.PerspectiveCamera(75, render_w/render_h,0.01,10000);
+camera_wolrd.position.set(35,0,200);
 camera_wolrd.lookAt(0,0,0);
 camera_wolrd.up.set(0,1,0);
 
-
-const scene=new THREE.Scene();
-
-renderer.domElement.addEventListener("mousedown", mouseDownHandler, false);
-renderer.domElement.addEventListener("mousemove", mouseMoveHandler, false);
-renderer.domElement.addEventListener('mouseup', mouseUpHandler, false);
-
-let controls;
-
-const texture_video=new THREE.VideoTexture(videoElement);
-scene.background = texture_video;
+const cameraPerspectiveHelper= new THREE.CameraHelper( camera_perspective );
+scene.add( cameraPerspectiveHelper );
 
 const light=new THREE.DirectionalLight(0xffffff,1.0);
 const amb_light=new THREE.AmbientLight(0xffffff,0.5);
-light.position.set(0,0,near);
+light.position.set(0,0,camera_ar.position.z-near);
+
 const light_helper = new THREE.DirectionalLightHelper( light, 0 );
 scene.add(light);
 scene.add(amb_light);
@@ -60,36 +64,51 @@ const mmaterial = new LineMaterial( { color: 0x00ffff, linewidth: 2 } );
 let oval_point_mesh=null;
 let face_mesh=null;
 
-let mouseX = 0;
-let mouseY = 0;
-let down=0;
+const texture_video=new THREE.VideoTexture(videoElement);
+scene.background = texture_video;
+
+const hFar = 2 * Math.tan(camera_perspective.fov * Math.PI / 180 / 2) * camera_perspective.far; // height
+const wFar = hFar * camera_perspective.aspect; // width
+
+const plane_geometry = new THREE.PlaneGeometry(wFar, hFar );
+const plane_material = new THREE.MeshBasicMaterial( { map: texture_video } );
+const plane = new THREE.Mesh( plane_geometry, plane_material );
+plane.position.set(0,0,camera_ar.position.z-far);
+plane.lookAt(camera_ar.position);
 
 const p_c=new THREE.Vector3(0,0,0).unproject(camera_ar);
 const vec_cam2center=new THREE.Vector3().subVectors(p_c,camera_ar.position);
 const center_dist=vec_cam2center.length();
 
+function ProjScale(p_ms,cam_pos,src_d,dst_d){
+  let vec_cam2p=new THREE.Vector3().subVectors(p_ms,cam_pos);
+  return new THREE.Vector3().addVectors(cam_pos,vec_cam2p.multiplyScalar(dst_d/src_d));
+}
+
+let down=0;
+let light_pos_ps=new THREE.Vector3(light.position.x,light.position.y,-1);
+let light_pos_ws;
+
+function light_update(){
+  light_pos_ws=new THREE.Vector3(light_pos_ps.x,light_pos_ps.y,light_pos_ps.z).unproject(camera_perspective);
+  light.position.set(light_pos_ws.x,light_pos_ws.y,light_pos_ws.z); 
+  camera_perspective.updateProjectionMatrix();
+  cameraPerspectiveHelper.update();
+  light_helper.update();
+}
+
 function mouseDownHandler(e) {
   down=1;
-  mouseX = ( e.clientX - render_w/2 );
-	mouseY = -( e.clientY - render_h/2 );
-  
-  const pos_ps=new THREE.Vector3(mouseX,-mouseY,-1);
-  let pos_ws=new THREE.Vector3(pos_ps.x,pos_ps.y,pos_ps.z).unproject(camera_ar);
-  pos_ws=ProjScale(pos_ws,camera_ar.position,center_dist,1); 
-  light.position.set(pos_ws); 
+  light_pos_ps=new THREE.Vector3((e.clientX / render_w) * 2.0 -1.0,
+  -(e.clientY / render_h) * 2.0+1.0,-1);
+  light_update();
 }
 
 function mouseMoveHandler(e) {
   if (down==1){
-    
-    mouseX = ( e.clientX - render_w/2 );
-    mouseY = -( e.clientY - render_h/2 );
-    const pos_ps=new THREE.Vector3((e.clientX / render_w) * 2.0 -1.0,
-    -(e.clientY / render_h) * 2.0+1.0,-1);
-    let pos_ws=new THREE.Vector3(pos_ps.x,pos_ps.y,pos_ps.z).unproject(camera_ar);
-    pos_ws=ProjScale(pos_ws,camera_ar.position,center_dist,1); 
-    light.position.set(pos_ws.x,pos_ws.y,near); 
-    console.log(pos_ws);
+    light_pos_ps=new THREE.Vector3((e.clientX / render_w) * 2.0 -1.0,
+  -(e.clientY / render_h) * 2.0+1.0,-1);
+    light_update();
   }
 }
 
@@ -97,39 +116,35 @@ function mouseUpHandler(e) {
   down=0;
 }
 
-
-function ProjScale(p_ms,cam_pos,src_d,dst_d){
-  let vec_cam2p=new THREE.Vector3().subVectors(p_ms,cam_pos);
-  return new THREE.Vector3().addVectors(cam_pos,vec_cam2p.multiplyScalar(dst_d/src_d));
+function mouseWheel(e) {
+  if (e.deltaY > 0) { // wheel down
+    camera_perspective.near-=1;
+  }
+  else { // wheel up
+    camera_perspective.near+=1;
+  }
+  light_update();
 }
 
-let cameraPerspectiveHelper;
-const aspect=render_w/render_h;
+let controls;
 
-cameraPerspectiveHelper = new THREE.CameraHelper( camera_ar );
-scene.add( cameraPerspectiveHelper );
-
-
-controls = new OrbitControls( camera_ar, renderer_world.domElement );
+controls = new OrbitControls( camera_wolrd, renderer_world.domElement );
 controls.listenToKeyEvents( renderer_world.domElement ); // optional
 
-//controls.addEventListener( 'change', render ); // call this only in static scenes (i.e., if there is no animation loop)
+//controls.addEventListener( 'change', renderer_world ); // call this only in static scenes (i.e., if there is no animation loop)
 
 controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
 controls.dampingFactor = 0.05;
 
-controls.screenSpacePanning = false;
-
-controls.minDistance = 100;
-controls.maxDistance = 500;
-
-controls.maxPolarAngle = Math.PI / 2;
+//controls.screenSpacePanning = false;
+//controls.minDistance = 100;
+//controls.maxDistance = 500;
+//controls.maxPolarAngle = Math.PI / 2;
 
 
 function onResults(results) {
   if (results.multiFaceLandmarks) {
     for (const landmarks of results.multiFaceLandmarks) {    
-
       // FACEMESH_FACE_OVAL, landmarks
       if(oval_point_mesh==null){
         let oval_point_geo=new THREE.BufferGeometry();
@@ -156,7 +171,6 @@ function onResults(results) {
         // line2
 
         mgeometry.setPositions( oval_vertices );
-        // resolution of the inset viewport
         mmaterial.resolution.set( render_w, render_h );
         lines = new Line2( mgeometry, mmaterial );
         //lines.computeLineDistances();
@@ -175,6 +189,7 @@ function onResults(results) {
 
       const num_oval_points=FACEMESH_FACE_OVAL.length;
       let positions=oval_point_mesh.geometry.attributes.position.array;
+      const center_position =new THREE.Vector3(0,0,0);
       for(let i=0;i<=num_oval_points;i++){
         let index;
         if(i==num_oval_points){
@@ -191,7 +206,14 @@ function onResults(results) {
         positions[3*i+0]=pos_ws.x;
         positions[3*i+1]=pos_ws.y;
         positions[3*i+2]=pos_ws.z;
+
+        center_position.x+=pos_ws.x;
+        center_position.y+=pos_ws.y;
+        center_position.z+=pos_ws.z;
       }
+      center_position.x=center_position.x/num_oval_points;
+      center_position.y=center_position.y/num_oval_points;
+      center_position.z=center_position.z/num_oval_points;
       
       oval_point_mesh.geometry.attributes.position.needsUpdate=true;
       //lines.computeLineDistances();
@@ -219,23 +241,24 @@ function onResults(results) {
 
       light.target=face_mesh;
 
-      
+      //camera_wolrd.lookAt(center_position);
+      controls.target.set(center_position.x,center_position.y,center_position.z);
+      controls.update();
 
-      //camera
-      
+      plane_material.map=texture_frame;
       scene.background = texture_video;
       scene.remove(cameraPerspectiveHelper);
       scene.remove(light_helper);
+      scene.remove( plane );
       renderer.render(scene, camera_ar);
 
       scene.background=null;
       scene.add(cameraPerspectiveHelper);
       scene.add(light_helper);
+      scene.add( plane );
       renderer_world.render(scene, camera_wolrd);
     }
   }
-
-  //canvasCtx.restore();
 }
 
 const faceMesh = new FaceMesh({locateFile: (file) => {
