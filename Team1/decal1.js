@@ -152,7 +152,6 @@ import * as THREE from 'three';
                     // https://threejs.org/docs/#api/en/core/Raycaster.intersectObject
                     // intersects[] 고민해봐야할듯
 					raycaster.intersectObject( mesh, false, intersects );
-
 					if ( intersects.length > 0 ) {
                         
                         // point of intersection, in world coordinates
