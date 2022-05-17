@@ -12,6 +12,7 @@ let raycaster;
 let line;
 
 const objects=[];
+let m ;
 
 // renderer
 const renderer = new THREE.WebGLRenderer();
@@ -86,6 +87,9 @@ let mouseHelper;
 const position = new THREE.Vector3();
 const orientation = new THREE.Euler();
 const size = new THREE.Vector3( 10, 10, 10 );
+
+const mposition = new THREE.Vector3();
+const morientation = new THREE.Euler();
 
 const params = {
     minScale: 10,
@@ -179,6 +183,7 @@ function checkIntersection( x, y ) {
 }
 
 
+
 // initialize
 const p_c=new THREE.Vector3(0,0,0).unproject(camera_ar);
 const vec_cam2center=new THREE.Vector3().subVectors(p_c,camera_ar.position);
@@ -225,6 +230,7 @@ function onResults(results) {
         face_mesh=new THREE.Mesh(face_geometry,face_material);
         face_mesh.geometry.setIndex(TRIANGULATION);
         mesh=face_mesh;
+
         scene.add(face_mesh);
         objects.push(face_mesh);
       }
@@ -277,7 +283,10 @@ function onResults(results) {
       face_mesh.geometry.attributes.uv.needsUpdate=true;
       face_mesh.geometry.computeVertexNormals();
 
-      console.log(face_mesh.geometry.attributes.position);
+      for (let i=0; i<decals.length;i++){
+        
+      }
+
 
       let texture_frame=new THREE.CanvasTexture(results.image);
       face_mesh.material.map=texture_frame;
@@ -307,7 +316,7 @@ function shoot() {
     const material = decalMaterial.clone();
     material.color.setHex( Math.random() * 0xffffff );
 
-    const m = new THREE.Mesh( new DecalGeometry( mesh, position, orientation, size ), material );
+    m= new THREE.Mesh( new DecalGeometry( mesh, position, orientation, size ), material );
     
     decals.push( m );
     //scene.add( m );
