@@ -284,6 +284,12 @@ function onResults(results) {
       face_mesh.geometry.computeVertexNormals();
 
       for (let i=0; i<decals.length;i++){
+        position.copy( intersection.point );
+        orientation.copy( mouseHelper.rotation );
+
+
+        if ( params.rotate ) orientation.z = Math.random() * 2 * Math.PI;
+
         
       }
 
