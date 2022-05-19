@@ -104,7 +104,7 @@ mouseHelper = new THREE.Mesh( new THREE.BoxGeometry( 1, 1, 10 ), new THREE.MeshN
 mouseHelper.visible = true;
 scene.add( mouseHelper );
 
-renderer.domElement.addEventListener( 'pointerup', function ( event ) {
+window.addEventListener( 'pointerup', function ( event ) {
 
         checkIntersection( event.clientX, event.clientY );
 
@@ -112,7 +112,7 @@ renderer.domElement.addEventListener( 'pointerup', function ( event ) {
 
 } );
 
-renderer.domElement.addEventListener( 'pointermove', onPointerMove );
+window.addEventListener( 'pointermove', onPointerMove );
 
 function onPointerMove( event ) {
 
