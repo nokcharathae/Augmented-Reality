@@ -11,7 +11,6 @@ let mesh;
 let raycaster;
 let line;
 
-const objects=[];
 let m ;
 
 // renderer
@@ -37,16 +36,12 @@ camera_ar.position.set(0,0,100);
 camera_ar.lookAt(0,0,0);
 camera_ar.up.set(0,1,0);
 
-
 // light
 const light=new THREE.DirectionalLight(0xffffff,1.0);
 const amb_light=new THREE.AmbientLight(0xffffff,0.4);
 light.position.set(0,0,camera_ar.position.z-near);
-
-const light_helper = new THREE.DirectionalLightHelper( light, 0 );
 scene.add(light);
 scene.add(amb_light);
-scene.add( light_helper );
 
 // mouse helper
 const geometry = new THREE.BufferGeometry();
@@ -79,10 +74,6 @@ const decalMaterial = new THREE.MeshPhongMaterial( {
     polygonOffsetFactor: - 4,
     wireframe: false
 } );
-
-let nearland=0;
-let landistance=100.0;
-let check=0;
 
 const mouse = new THREE.Vector2();
 const intersects = [];
@@ -118,7 +109,6 @@ renderer.domElement.addEventListener( 'pointerdown', function ( event ) {
   if ( intersection.is_intersected ) shoot();
 
 } );
-
 
 renderer.domElement.addEventListener( 'pointermove', onPointerMove );
 
@@ -173,8 +163,10 @@ function checkIntersection( x, y ) {
 }
 
 
-
 // initialize
+let nearland=0;
+let landistance=100;
+let check=0;
 const p_c=new THREE.Vector3(0,0,0).unproject(camera_ar);
 const vec_cam2center=new THREE.Vector3().subVectors(p_c,camera_ar.position);
 const center_dist=vec_cam2center.length();
@@ -282,7 +274,7 @@ function onResults(results) {
       for (let i=0; i<decals.length;i++){
         //console.log(orientation);
 
-        scene.remove(decals[i]);
+        /*scene.remove(decals[i]);
         decals.splice(i,1);
         renderer.info.reset() // 메모리 누수 방지
 
@@ -290,6 +282,16 @@ function onResults(results) {
         //console.log(m);
         decals.unshift(m);
         //console.log(decals);
+        scene.add(m);*/
+
+        scene.remove(decals.pop());
+        scene.remove(decals.pop());
+        //decals.splice(i,1);
+        renderer.info.reset() // 메모리 누수 방지
+
+        m= new THREE.Mesh( new DecalGeometry( mesh, decalpos,orientation , size ), material );
+        decals.unshift(m);
+        console.log(decals);
         scene.add(m);
       }
 
