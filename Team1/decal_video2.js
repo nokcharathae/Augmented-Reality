@@ -80,6 +80,9 @@ const decalMaterial = new THREE.MeshPhongMaterial( {
     wireframe: false
 } );
 
+let nearland=0;
+let landistance=100.0;
+let check=0;
 
 const mouse = new THREE.Vector2();
 const intersects = [];
@@ -101,29 +104,29 @@ const params = {
 raycaster = new THREE.Raycaster();
 
 let mouseHelper;
-const position = new THREE.Vector3();
+let position = new THREE.Vector3();
 const orientation = new THREE.Euler();
 const size = new THREE.Vector3( 10, 10, 10 );
 mouseHelper = new THREE.Mesh( new THREE.BoxGeometry( 1, 1, 10 ), new THREE.MeshNormalMaterial() );
 mouseHelper.visible = true;
 scene.add( mouseHelper );
 
-renderer.domElement.addEventListener( 'pointerup', function ( event ) {
 
-        checkIntersection( event.clientX, event.clientY );
+renderer.domElement.addEventListener( 'pointerdown', function ( event ) {
 
-        if ( intersection.is_intersected ) shoot();
+  checkIntersection( event.clientX, event.clientY );
+  if ( intersection.is_intersected ) shoot();
 
 } );
+
 
 renderer.domElement.addEventListener( 'pointermove', onPointerMove );
 
 function onPointerMove( event ) {
+  if ( event.isPrimary ) {
 
-    if ( event.isPrimary ) {
-
-        checkIntersection( event.clientX, event.clientY );
-    }
+      checkIntersection( event.clientX, event.clientY );
+  }
 }
 
 function checkIntersection( x, y ) {
@@ -181,6 +184,7 @@ function ProjScale(p_ms,cam_pos,src_d,dst_d){
   return new THREE.Vector3().addVectors(cam_pos,vec_cam2p.multiplyScalar(dst_d/src_d));
 }
 
+let decalpos=new Vector3(0,0,0);
 function onResults(results) {
   if (results.multiFaceLandmarks) {
     for (const landmarks of results.multiFaceLandmarks) {    
@@ -197,17 +201,20 @@ function onResults(results) {
         face_mesh.geometry.setIndex(TRIANGULATION);
         mesh=face_mesh;
 
-        // decal mesh
-
-
         scene.add(face_mesh);
       }
       // 얼굴에 맞닿은 position 값을 알아내는 것이 관건
 
       // face mesh update
-      const center_position =new THREE.Vector3(0,0,0);
-      const centernor=new THREE.Vector3(0,0,0);
+
+      let center_position =new THREE.Vector3(0,0,0);
+      let centernor=new THREE.Vector3(0,0,0);
       for(let i=0;i<landmarks.length;i++){
+        if (check==0) 
+        {
+          i=0;
+          check=1;
+        }
         const pos_ns=landmarks[i];
         const pos_ps=new THREE.Vector3((pos_ns.x-0.5)*2,-(pos_ns.y-0.5)*2,pos_ns.z);
         let pos_ws=new THREE.Vector3(pos_ps.x,pos_ps.y,pos_ps.z).unproject(camera_ar);
@@ -226,10 +233,25 @@ function onResults(results) {
         centernor.x+=face_mesh.geometry.attributes.normal.array[3*i+0];
         centernor.y+=face_mesh.geometry.attributes.normal.array[3*i+1];
         centernor.z+=face_mesh.geometry.attributes.normal.array[3*i+2];
+        
+        if(decals.length>0 && check==1)
+        {
+          if(pos_ws.distanceTo(position)<landistance)
+          {
+            landistance=pos_ws.distanceTo(position);
+            nearland=i;
+            decalpos=pos_ws;
+          }
+        }
+        if(check==2 && i==nearland)
+        {
+          decalpos=pos_ws;
+        }
       }
+      if(decals.length>0)
+        {check=2;}
 
       center_position.divideScalar(landmarks.length);
-
       centernor.divideScalar(landmarks.length).normalize();
       // centernor.x/=landmarks.length;
       // centernor.y/=landmarks.length;
@@ -247,7 +269,7 @@ function onResults(results) {
       const temp=new Vector3(0,0,0).sub(center_position);
       const temp_pos=position.clone();
       temp_pos.sub(temp);
-      console.log(temp_pos);
+      //console.log(position);
 
       const qrot = new THREE.Quaternion();
       qrot.setFromUnitVectors(temp,temp_pos);
@@ -262,11 +284,12 @@ function onResults(results) {
 
         scene.remove(decals[i]);
         decals.splice(i,1);
+        renderer.info.reset() // 메모리 누수 방지
 
-
-        m= new THREE.Mesh( new DecalGeometry( mesh, temp_pos,orientation , size ), material );
+        m= new THREE.Mesh( new DecalGeometry( mesh, decalpos,orientation , size ), material );
         //console.log(m);
         decals.unshift(m);
+        //console.log(decals);
         scene.add(m);
       }
 
@@ -282,7 +305,7 @@ function onResults(results) {
 
 
 function shoot() {
-
+  check=0;
     position.copy( intersection.point );
     orientation.copy( mouseHelper.rotation );
 
@@ -299,7 +322,7 @@ function shoot() {
     
     decals.push( m );
     scene.add(m);
-
+    console.log(check);
 }
 
 function removeDecals() {
