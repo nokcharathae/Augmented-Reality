@@ -167,6 +167,10 @@ function checkIntersection( x, y ) {
 let nearland=0;
 let landistance=100;
 let check=0;
+
+let preAngle;
+let nowAngle;
+
 const p_c=new THREE.Vector3(0,0,0).unproject(camera_ar);
 const vec_cam2center=new THREE.Vector3().subVectors(p_c,camera_ar.position);
 const center_dist=vec_cam2center.length();
@@ -254,21 +258,7 @@ function onResults(results) {
       face_mesh.geometry.attributes.uv.needsUpdate=true;
       face_mesh.geometry.computeVertexNormals();
 
-      
-      //console.log(position);
-      //const temp=center_position.sub(position);
 
-      const temp=new Vector3(0,0,0).sub(center_position);
-      const temp_pos=position.clone();
-      temp_pos.sub(temp);
-      //console.log(position);
-
-      const qrot = new THREE.Quaternion();
-      qrot.setFromUnitVectors(temp,temp_pos);
-      const temp_euler=new Euler(0,0,0);
-      temp_euler.setFromQuaternion(qrot);
-      temp_euler.x=orientation.x;
-      temp_euler.y=orientation.y;
 
       // dacal uqdate
       for (let i=0; i<decals.length;i++){
@@ -310,6 +300,7 @@ function shoot() {
   check=0;
     position.copy( intersection.point );
     orientation.copy( mouseHelper.rotation );
+    preAngle=orientation;
 
     if ( params.rotate ) orientation.z = Math.random() * 2 * Math.PI;
 
