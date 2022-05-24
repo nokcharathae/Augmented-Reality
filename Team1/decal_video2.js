@@ -21,6 +21,7 @@ renderer.setSize(render_w,render_h);
 renderer.setViewport(0,0,render_w,render_h);
 document.body.appendChild(renderer.domElement);
 
+let FirstZ = null;
 
 // scene
 const scene=new THREE.Scene();
@@ -203,7 +204,6 @@ function onResults(results) {
 
       // face mesh update
 
-      let center_position =new THREE.Vector3(0,0,0);
       let centernor=new THREE.Vector3(0,0,0);
       for(let i=0;i<landmarks.length;i++){
         if (check==0) 
@@ -222,13 +222,7 @@ function onResults(results) {
         face_mesh.geometry.attributes.uv.array[2*i+0]=pos_ns.x;
         face_mesh.geometry.attributes.uv.array[2*i+1]=1.0-pos_ns.y;
 
-        center_position.x+=pos_ws.x;
-        center_position.y+=pos_ws.y;
-        center_position.z+=pos_ws.z;
 
-        centernor.x+=face_mesh.geometry.attributes.normal.array[3*i+0];
-        centernor.y+=face_mesh.geometry.attributes.normal.array[3*i+1];
-        centernor.z+=face_mesh.geometry.attributes.normal.array[3*i+2];
         
         if(decals.length>0 && check==1)
         {
@@ -238,16 +232,35 @@ function onResults(results) {
             nearland=i;
             decalpos=pos_ws;
           }
+
+          
         }
         if(check==2 && i==nearland)
         {
           decalpos=pos_ws;
+          if(FirstZ==null)
+        {
+          FirstZ = decalpos.z;
+        }
+        else
+        {
+          let NowZ = decalpos.z;
+          let SetSize = 10;
+          //비율을 어떻게 계산할지 생각해봐야할듯 
+          //원근법 계산
+          let Distance = (NowZ-FirstZ)/FirstZ;
+          let ViewScale = SetSize + SetSize*Distance/2;
+  
+         // console.log(ViewScale)
+
+          size.set(ViewScale,ViewScale,ViewScale)
+        }
         }
       }
       if(decals.length>0)
         {check=2;}
 
-      center_position.divideScalar(landmarks.length);
+
       centernor.divideScalar(landmarks.length).normalize();
       // centernor.x/=landmarks.length;
       // centernor.y/=landmarks.length;
@@ -258,7 +271,8 @@ function onResults(results) {
       face_mesh.geometry.attributes.uv.needsUpdate=true;
       face_mesh.geometry.computeVertexNormals();
 
-
+      console.log(decalpos.z)
+      //console.log(size)
 
       // dacal uqdate
       for (let i=0; i<decals.length;i++){
@@ -281,7 +295,7 @@ function onResults(results) {
 
         m= new THREE.Mesh( new DecalGeometry( mesh, decalpos,orientation , size ), material );
         decals.unshift(m);
-        console.log(decals);
+        //console.log(decals);
         scene.add(m);
       }
 
