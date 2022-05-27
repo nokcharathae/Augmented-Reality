@@ -203,7 +203,7 @@ function onResults(results) {
       // 얼굴에 맞닿은 position 값을 알아내는 것이 관건
 
       // face mesh update
-
+      
       let centernor=new THREE.Vector3(0,0,0);
       for(let i=0;i<landmarks.length;i++){
         if (check==0) 
@@ -222,8 +222,10 @@ function onResults(results) {
         face_mesh.geometry.attributes.uv.array[2*i+0]=pos_ns.x;
         face_mesh.geometry.attributes.uv.array[2*i+1]=1.0-pos_ns.y;
 
+        centernor.x=pos_ws.x;
+        centernor.y=pos_ws.y;
+        centernor.z=pos_ws.z;
 
-        
         if(decals.length>0 && check==1)
         {
           if(pos_ws.distanceTo(position)<landistance)
@@ -250,10 +252,10 @@ function onResults(results) {
           //원근법 계산
           let Distance = (NowZ-FirstZ)/FirstZ;
           let ViewScale = SetSize + SetSize*Distance/2;
-  
+          
          // console.log(ViewScale)
 
-          size.set(ViewScale,ViewScale,ViewScale)
+         // size.set(ViewScale,ViewScale,ViewScale)
         }
         }
       }
@@ -262,16 +264,13 @@ function onResults(results) {
 
 
       centernor.divideScalar(landmarks.length).normalize();
-      // centernor.x/=landmarks.length;
-      // centernor.y/=landmarks.length;
-      // centernor.z/=landmarks.length;
       //console.log(centernor);
       
       face_mesh.geometry.attributes.position.needsUpdate=true;
       face_mesh.geometry.attributes.uv.needsUpdate=true;
       face_mesh.geometry.computeVertexNormals();
 
-      console.log(decalpos.z)
+      //console.log(decalpos.z)
       //console.log(size)
 
       // dacal uqdate
@@ -287,13 +286,26 @@ function onResults(results) {
         decals.unshift(m);
         //console.log(decals);
         scene.add(m);*/
+        
+
+        m.lookAt(centernor);
+        console.log(decals);
+        nowAngle=m.rotation;
+        console.log(nowAngle);
+        nowAngle.x=orientation.x;
+        nowAngle.y=orientation.y;
+        nowAngle.z=-nowAngle.z;
+
+        //console.log(nowAngle);
 
         scene.remove(decals.pop());
         scene.remove(decals.pop());
         //decals.splice(i,1);
-        renderer.info.reset() // 메모리 누수 방지
+        renderer.info.reset(); // 메모리 누수 방지
+        
 
-        m= new THREE.Mesh( new DecalGeometry( mesh, decalpos,orientation , size ), material );
+        m= new THREE.Mesh( new DecalGeometry( mesh, decalpos,nowAngle , size ), material );
+        //m.lookAt(centernor);
         decals.unshift(m);
         //console.log(decals);
         scene.add(m);
