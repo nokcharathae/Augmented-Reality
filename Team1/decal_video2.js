@@ -22,6 +22,7 @@ renderer.setViewport(0,0,render_w,render_h);
 document.body.appendChild(renderer.domElement);
 
 let FirstZ = null;
+let FirstAngle=null;
 
 // scene
 const scene=new THREE.Scene();
@@ -182,6 +183,7 @@ function ProjScale(p_ms,cam_pos,src_d,dst_d){
 }
 
 let decalpos=new Vector3(0,0,0);
+
 function onResults(results) {
   if (results.multiFaceLandmarks) {
     for (const landmarks of results.multiFaceLandmarks) {    
@@ -239,25 +241,36 @@ function onResults(results) {
         }
         if(check==2 && i==nearland)
         {
-          decalpos=pos_ws;
-          if(FirstZ==null)
-        {
-          FirstZ = decalpos.z;
-        }
-        else
-        {
-          let NowZ = decalpos.z;
-          let SetSize = 10;
-          //비율을 어떻게 계산할지 생각해봐야할듯 
-          //원근법 계산
-          let Distance = (NowZ-FirstZ)/FirstZ;
-          let ViewScale = SetSize + SetSize*Distance/2;
-          
-         // console.log(ViewScale)
+            decalpos=pos_ws;
+            let mdedalpos=decalpos.clone();
+           
+          if (FirstZ == null) {
+            FirstZ = decalpos.z;
+            FirstAngle=mdedalpos.sub(centernor);
 
-         // size.set(ViewScale,ViewScale,ViewScale)
+          }
+          else {
+            let NowZ = decalpos.z;
+            let SetSize = 10;
+            let ViewScale= null;
+
+            let Distance = NowZ - FirstZ;
+            ViewScale = SetSize + SetSize * Distance / 2;
+
+            FirstZ = decalpos.z;
+
+            console.log("FirsTZ : " + FirstZ + "\nNowZ : " + NowZ + "\nViewSCale : " + ViewScale + "\nDistance : " + Distance)
+
+            size.set(ViewScale, ViewScale, ViewScale)
+
+            nowAngle=mdedalpos.sub(centernor);
+            preAngle=new THREE.Euler().setFromQuaternion(new THREE.Quaternion().setFromUnitVectors(FirstAngle,nowAngle));
+            FirstAngle=mdedalpos.sub(centernor);
+
+          }
+
         }
-        }
+        
       }
       if(decals.length>0)
         {check=2;}
@@ -288,13 +301,13 @@ function onResults(results) {
         scene.add(m);*/
         
 
-        m.lookAt(centernor);
-        console.log(decals);
-        nowAngle=m.rotation;
-        console.log(nowAngle);
-        nowAngle.x=orientation.x;
-        nowAngle.y=orientation.y;
-        nowAngle.z=-nowAngle.z;
+        //m.lookAt(centernor);
+        //console.log(decals);
+        //nowAngle=m.rotation;
+        //console.log(nowAngle);
+        //nowAngle.x=orientation.x;
+        //nowAngle.y=orientation.y;
+        //nowAngle.z=orientation.z+nowAngle.z*0.5;
 
         //console.log(nowAngle);
 
@@ -304,7 +317,7 @@ function onResults(results) {
         renderer.info.reset(); // 메모리 누수 방지
         
 
-        m= new THREE.Mesh( new DecalGeometry( mesh, decalpos,nowAngle , size ), material );
+        m= new THREE.Mesh( new DecalGeometry( mesh, decalpos,preAngle , size ), material );
         //m.lookAt(centernor);
         decals.unshift(m);
         //console.log(decals);
@@ -341,7 +354,7 @@ function shoot() {
     
     decals.push( m );
     scene.add(m);
-    console.log(check);
+    //console.log(check);
 }
 
 function removeDecals() {
