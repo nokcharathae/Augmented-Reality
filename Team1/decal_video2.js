@@ -27,7 +27,7 @@ let FirstAngle=null;
 // scene
 const scene=new THREE.Scene();
 const texture_video=new THREE.VideoTexture(videoElement);
-scene.background = texture_video;
+//scene.background = texture_video;
 
 // camera
 const near = 80;
@@ -376,11 +376,11 @@ const camera = new Camera(videoElement, {
 camera.start();
 
 
-videoElement.play();
+// videoElement.play();
 
-async function detectionFrame(now, metadata) {
-  await faceMesh.send({image: videoElement});
-  videoElement.requestVideoFrameCallback(detectionFrame);
-}
+// async function detectionFrame(now, metadata) {
+//   await faceMesh.send({image: videoElement});
+//   videoElement.requestVideoFrameCallback(detectionFrame);
+// }
 
-detectionFrame();
+// detectionFrame();
