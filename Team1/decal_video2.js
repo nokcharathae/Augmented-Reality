@@ -255,7 +255,7 @@ function onResults(results) {
             let ViewScale= null;
 
             let Distance = NowZ - FirstZ;
-            ViewScale = SetSize + SetSize * Distance / 2;
+            ViewScale = SetSize + SetSize * Distance ;
 
             FirstZ = decalpos.z;
 
@@ -263,6 +263,7 @@ function onResults(results) {
 
             size.set(ViewScale, ViewScale, ViewScale)
 
+            // angle 계산
             nowAngle=mdedalpos.sub(centernor);
             preAngle=new THREE.Euler().setFromQuaternion(new THREE.Quaternion().setFromUnitVectors(FirstAngle,nowAngle));
             FirstAngle=mdedalpos.sub(centernor);
@@ -299,18 +300,7 @@ function onResults(results) {
         decals.unshift(m);
         //console.log(decals);
         scene.add(m);*/
-        
-
-        //m.lookAt(centernor);
-        //console.log(decals);
-        //nowAngle=m.rotation;
-        //console.log(nowAngle);
-        //nowAngle.x=orientation.x;
-        //nowAngle.y=orientation.y;
-        //nowAngle.z=orientation.z+nowAngle.z*0.5;
-
-        //console.log(nowAngle);
-
+      
         scene.remove(decals.pop());
         scene.remove(decals.pop());
         //decals.splice(i,1);
