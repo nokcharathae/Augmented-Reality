@@ -6,7 +6,6 @@ import { TRIANGULATION } from '../triangulation.js';
 import { Euler, Vector3 } from 'three';
 
 let face_mesh=null;
-
 let mesh;
 let raycaster;
 let line;
@@ -123,6 +122,7 @@ function onPointerMove( event ) {
 
 function checkIntersection( x, y ) {
 
+  mesh=face_mesh;
     if ( mesh === undefined ) return;
 
     mouse.x = ( x / render_w ) * 2 - 1;
@@ -132,7 +132,7 @@ function checkIntersection( x, y ) {
     raycaster.intersectObject( mesh, false, intersects );
 
     if ( intersects.length > 0 ) {
-        
+
         // point of intersection, in world coordinates
         const p = intersects[ 0 ].point;
         mouseHelper.position.copy( p );
@@ -198,16 +198,18 @@ function onResults(results) {
         let face_material=new THREE.MeshPhongMaterial({color:new THREE.Color(1.0,1.0,1.0), specular: new THREE.Color(0,0,0), shininess:1});
         face_mesh=new THREE.Mesh(face_geometry,face_material);
         face_mesh.geometry.setIndex(TRIANGULATION);
-        mesh=face_mesh;
 
+        //mesh=face_mesh;
+      
         scene.add(face_mesh);
       }
       // 얼굴에 맞닿은 position 값을 알아내는 것이 관건
 
       // face mesh update
-      
+
       let centernor=new THREE.Vector3(0,0,0);
       for(let i=0;i<landmarks.length;i++){
+
         if (check==0) 
         {
           i=0;
@@ -246,6 +248,8 @@ function onResults(results) {
            
           if (FirstZ == null) {
             FirstZ = decalpos.z;
+            centernor.z=0;
+            mdedalpos.z=0;
             FirstAngle=mdedalpos.sub(centernor);
 
           }
@@ -264,8 +268,12 @@ function onResults(results) {
             size.set(ViewScale, ViewScale, ViewScale)
 
             // angle 계산
+            centernor.z=0;
+            mdedalpos.z=0;
             nowAngle=mdedalpos.sub(centernor);
             preAngle=new THREE.Euler().setFromQuaternion(new THREE.Quaternion().setFromUnitVectors(FirstAngle,nowAngle));
+            centernor.z=0;
+            mdedalpos.z=0;
             FirstAngle=mdedalpos.sub(centernor);
 
           }
@@ -290,16 +298,6 @@ function onResults(results) {
       // dacal uqdate
       for (let i=0; i<decals.length;i++){
         //console.log(orientation);
-
-        /*scene.remove(decals[i]);
-        decals.splice(i,1);
-        renderer.info.reset() // 메모리 누수 방지
-
-        m= new THREE.Mesh( new DecalGeometry( mesh, decalpos,orientation , size ), material );
-        //console.log(m);
-        decals.unshift(m);
-        //console.log(decals);
-        scene.add(m);*/
       
         scene.remove(decals.pop());
         scene.remove(decals.pop());
@@ -318,6 +316,8 @@ function onResults(results) {
       face_mesh.material.map=texture_frame;
       light.target=face_mesh;
       scene.background = texture_video;
+      mesh=face_mesh;
+      console.log(face_mesh);
 
       renderer.render(scene, camera_ar);
     }
@@ -374,13 +374,3 @@ const camera = new Camera(videoElement, {
   height: 720
 });
 camera.start();
-
-
-// videoElement.play();
-
-// async function detectionFrame(now, metadata) {
-//   await faceMesh.send({image: videoElement});
-//   videoElement.requestVideoFrameCallback(detectionFrame);
-// }
-
-// detectionFrame();
